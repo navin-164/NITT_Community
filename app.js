@@ -27,9 +27,12 @@ try {
   app.use('/api/auth', require('./routes/auth'));        // implement auth routes
   app.use('/api/services', require('./routes/services'));// implement services routes
   app.use('/api/market', require('./routes/marketplace'));// implement marketplace routes
+  app.use('/api/complaints', require('./routes/complaints'));
+  app.use('/api/chat', require('./routes/chat'));
 } catch (e) {
   // If routers don't exist yet, don't crash — log to console and continue.
   // Remove this try/catch once actual route files exist.
+  console.log(e)
   console.warn('Some API route modules are not yet implemented. Create src/routes/*.js to remove this warning.');
 }
 
