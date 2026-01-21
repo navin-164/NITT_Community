@@ -1,5 +1,17 @@
+import os
+from dotenv import load_dotenv
 from neo4j import GraphDatabase
+
+# 1. Load environment variables
+load_dotenv()
+
+uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+user = os.getenv("NEO4J_USER", "neo4j")
+pw = os.getenv("NEO4J_PASSWORD", "password")
+
+# 2. Connect using the loaded credentials
 driver = GraphDatabase.driver(uri, auth=(user, pw))
+
 def find_mentors(student_id):
     query = """
     MATCH (s:Student {id:$sid})-[:INTERESTED_IN]->(t:Topic)
