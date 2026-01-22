@@ -10,6 +10,7 @@ user = os.getenv("NEO4J_USER", "neo4j")
 pw = os.getenv("NEO4J_PASSWORD", "password")
 
 # 2. Connect using the loaded credentials
+# Note: We use the variables defined above
 driver = GraphDatabase.driver(uri, auth=(user, pw))
 
 def find_mentors(student_id):

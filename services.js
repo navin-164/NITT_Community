@@ -8,22 +8,28 @@ router.get('/', async (req, res) => {
   res.json(services);
 });
 
-// Post a Service Request (Anyone) or Job Offer (Faculty/Alumni)
-// Logic: Students can request 'Cooking', Faculty can post 'Jobs'
+// Post a Service Request or Job Offer
 router.post('/', verifyToken, async (req, res) => {
   const { category, title, description } = req.body;
-  const userRole = req.user.role;
+  
+  // FIX: Convert role to lowercase to ensure matching works ('Alumni' vs 'alumni')
+  const userRole = req.user.role ? req.user.role.toLowerCase() : 'unknown';
 
-  // Example Constraint: Only Alumni/Faculty can post "Jobs"
-  if (category === 'Job' && !['Alumni', 'Faculty', 'Admin'].includes(userRole)) {
+  // Allowed roles for posting Jobs (Lowercase check)
+  const allowedJobPosters = ['alumni', 'faculty', 'admin'];
+
+  if (category === 'Job' && !allowedJobPosters.includes(userRole)) {
     return res.status(403).json({ error: "Students cannot post Jobs" });
   }
 
   const newService = new Listing({
     type: 'Service',
     category, title, description,
-    createdBy: req.user.username || req.user.id,
-    userRole
+    
+    // Save User Info
+    createdBy: req.user.name || req.user.username,
+    requester_user_id: req.user.id,
+    userRole: req.user.role // Keep original casing for display if preferred
   });
   
   await newService.save();
@@ -31,10 +37,12 @@ router.post('/', verifyToken, async (req, res) => {
   // Kafka Event for Analytics
   const producer = req.app.locals.producer;
   if (producer) {
-      await producer.send({
-          topic: 'post-events',
-          messages: [{ value: JSON.stringify({ type: 'PostCreated', category }) }]
-      });
+      try {
+        await producer.send({
+            topic: 'post-events',
+            messages: [{ value: JSON.stringify({ type: 'PostCreated', category }) }]
+        });
+      } catch(e) { console.error('Kafka Error', e); }
   }
 
   res.json({ message: "Service posted successfully" });
