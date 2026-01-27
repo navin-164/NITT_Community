@@ -50,6 +50,17 @@ router.get('/received', verifyToken, async (req, res) => {
     }
 });
 
+// NEW ROUTE: Get complaints sent BY me
+router.get('/sent', verifyToken, async (req, res) => {
+    try {
+        // Find complaints where 'submitter_id' matches the logged-in user
+        const complaints = await Complaint.find({ submitter_id: req.user.id }).sort({ created_at: -1 });
+        res.json(complaints);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // 3. Admin View: See ALL complaints
 router.get('/', verifyToken, checkRole(['Admin']), async (req, res) => {
     const complaints = await Complaint.find().sort({ created_at: -1 });
